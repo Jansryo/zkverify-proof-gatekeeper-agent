@@ -20,7 +20,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
           # Create the app if it does not exist yet (ignore error if it does).
-          flyctl apps create proof-gatekeeper-agent --org personal 2>/dev/null || true
+          flyctl apps create proof-gatekeeper-agent --org riojansem-gmail-com 2>/dev/null || true
           # Create the persistent volume for agent state if missing.
           flyctl volumes create gatekeeper_data --size 1 --region sin --app proof-gatekeeper-agent 2>/dev/null || true
           # Deploy (remote Docker build; the image includes the circuit artifacts).
