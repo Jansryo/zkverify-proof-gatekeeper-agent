@@ -1,0 +1,44 @@
+# Proof Gatekeeper agent — Fly.io deployment.
+# Deploy:  fly launch --no-deploy   (first time; picks the app name + region)
+#           fly secrets set AGENT_GAMES_HMAC_SECRET=... KURIER_API_KEY=...
+#           fly deploy
+#           fly volumes create gatekeeper_data --size 1 --region sin
+#
+# CRITICAL: this agent must be ALWAYS-ON. Free-tier hosting that sleeps
+# loses tasks (offline = forfeit). auto_stop_machines is false and
+# min_machines_running is 1 so the machine never stops.
+#
+# Set the app name on first deploy (fly launch) — do not invent one here.
+# Region "sin" (Singapore) is the closest to the operator (WIB); pick the
+# region nearest the platform if latency matters more than operator locality.
+
+app = "proof-gatekeeper-agent"
+primary_region = "sin"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+# Persistent state (proof_tx seen-set + task_id idempotency + log).
+# Create once: fly volumes create gatekeeper_data --size 1 --region sin
+[[mounts]]
+  source = "gatekeeper_data"
+  destination = "/app/data"
+
+[env]
+  PORT = "8080"
+  HOST = "0.0.0.0"
+  NODE_ENV = "production"
